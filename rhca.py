@@ -47,12 +47,12 @@ class RHCA(ctk.CTk):
         self.rh_apps_button = ctk.CTkButton(self.nav_frame, text="RH Apps", command=self.show_rh_apps)
         self.rh_apps_button.pack(pady=10, padx=20, fill="x")
 
-        # Update RHCA Button
-        self.update_button = ctk.CTkButton(self.nav_frame, text="Update RHCA", command=self.run_updater, fg_color="orange")
-        self.update_button.pack(pady=10, padx=20, fill="x")
-
-        # Exit Button at the bottom
+        # Exit and Update Buttons at the bottom
         self.nav_frame.pack_propagate(False)
+        
+        self.update_button = ctk.CTkButton(self.nav_frame, text="Update RHCA", command=self.run_updater, fg_color="orange")
+        self.update_button.pack(side="bottom", pady=(0, 10), padx=20, fill="x")
+
         self.exit_button = ctk.CTkButton(self.nav_frame, text="Exit", command=self.quit, fg_color="red", text_color="white")
         self.exit_button.pack(side="bottom", pady=10, padx=20, fill="x")
 
