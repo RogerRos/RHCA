@@ -3,12 +3,14 @@ import customtkinter as ctk
 from PIL import Image, UnidentifiedImageError
 import subprocess
 import json
+import sys
 
 # Constants
 APPS_DIR = os.path.join(os.path.expanduser("~"), "ROSHUB", "apps")
 DEFAULT_LOGO = "images/default_logo.png"
 REPO_LIST = "repo_list.json"
 GIT_PORTABLE_PATH = os.path.join(os.getcwd(), "Git", "bin", "git.exe")  # Ruta a Git Portable
+RHCA_UPDATER = os.path.join(os.getcwd(), "rhcaupdater.py")  # Ruta al archivo rhcaupdater.py
 
 # Ensure Git Portable is available
 def ensure_git():
@@ -37,13 +39,17 @@ class RHCA(ctk.CTk):
         self.show_home()
 
     def setup_navbar(self):
-        # Home Button (renamed from Apps)
+        # Home Button
         self.home_button = ctk.CTkButton(self.nav_frame, text="Home", command=self.show_home)
         self.home_button.pack(pady=10, padx=20, fill="x")
 
-        # New Button for RH Apps (Repositories)
+        # RH Apps Button
         self.rh_apps_button = ctk.CTkButton(self.nav_frame, text="RH Apps", command=self.show_rh_apps)
         self.rh_apps_button.pack(pady=10, padx=20, fill="x")
+
+        # Update RHCA Button
+        self.update_button = ctk.CTkButton(self.nav_frame, text="Update RHCA", command=self.run_updater, fg_color="orange")
+        self.update_button.pack(pady=10, padx=20, fill="x")
 
         # Exit Button at the bottom
         self.nav_frame.pack_propagate(False)
@@ -126,6 +132,13 @@ class RHCA(ctk.CTk):
                     install_button = ctk.CTkButton(repo_frame, text="Install", command=lambda r=repo: self.install_repo(r))
                     install_button.pack(side="right", padx=10, pady=10)
 
+    def run_updater(self):
+        if os.path.isfile(RHCA_UPDATER):
+            subprocess.Popen(["python", RHCA_UPDATER])
+            self.quit()
+        else:
+            ctk.CTkLabel(self.main_frame, text="Updater not found!", text_color="red").pack(pady=10)
+
     def install_repo(self, repo_url):
         repo_name = os.path.basename(repo_url).replace(".git", "")
         repo_path = os.path.join(APPS_DIR, repo_name)
@@ -155,9 +168,6 @@ class RHCA(ctk.CTk):
                 os.system(f'python "main.py"')
             finally:
                 os.chdir(original_cwd)
-        else:
-            error_label = ctk.CTkLabel(self.main_frame, text="Unable to open the application.", text_color="red")
-            error_label.pack(pady=10)
 
     def clear_main_frame(self):
         for widget in self.main_frame.winfo_children():
