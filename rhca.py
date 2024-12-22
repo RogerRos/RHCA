@@ -1,4 +1,5 @@
 import os
+import shutil
 import customtkinter as ctk
 from PIL import Image, UnidentifiedImageError
 import subprocess
@@ -49,7 +50,7 @@ class RHCA(ctk.CTk):
 
         # Exit and Update Buttons at the bottom
         self.nav_frame.pack_propagate(False)
-        
+
         self.update_button = ctk.CTkButton(self.nav_frame, text="Update RHCA", command=self.run_updater, fg_color="orange")
         self.update_button.pack(side="bottom", pady=(0, 10), padx=20, fill="x")
 
@@ -128,6 +129,9 @@ class RHCA(ctk.CTk):
                 if is_installed:
                     update_button = ctk.CTkButton(repo_frame, text="Update", command=lambda r=repo: self.update_repo(r))
                     update_button.pack(side="right", padx=10, pady=10)
+
+                    delete_button = ctk.CTkButton(repo_frame, text="Delete", fg_color="red", command=lambda r=repo: self.delete_repo(r))
+                    delete_button.pack(side="right", padx=10, pady=10)
                 else:
                     install_button = ctk.CTkButton(repo_frame, text="Install", command=lambda r=repo: self.install_repo(r))
                     install_button.pack(side="right", padx=10, pady=10)
@@ -150,14 +154,25 @@ class RHCA(ctk.CTk):
                 ctk.CTkLabel(self.main_frame, text=f"Failed to install {repo_name}.", text_color="red").pack(pady=10)
 
     def update_repo(self, repo_url):
+        self.delete_repo(repo_url)
+        self.install_repo(repo_url)
+
+    def delete_repo(self, repo_url):
         repo_name = os.path.basename(repo_url).replace(".git", "")
         repo_path = os.path.join(APPS_DIR, repo_name)
         if os.path.exists(repo_path):
             try:
-                subprocess.run([GIT_PORTABLE_PATH, "-C", repo_path, "pull"], check=True)
-                ctk.CTkLabel(self.main_frame, text=f"Updated {repo_name} successfully.", text_color="green").pack(pady=10)
-            except subprocess.CalledProcessError:
-                ctk.CTkLabel(self.main_frame, text=f"Failed to update {repo_name}.", text_color="red").pack(pady=10)
+                for root, dirs, files in os.walk(repo_path, topdown=False):
+                    for name in files:
+                        file_path = os.path.join(root, name)
+                        os.chmod(file_path, 0o777)  # Cambiar permisos
+                        os.remove(file_path)
+                    for name in dirs:
+                        os.rmdir(os.path.join(root, name))
+                shutil.rmtree(repo_path)
+                ctk.CTkLabel(self.main_frame, text=f"Deleted {repo_name} successfully.", text_color="green").pack(pady=10)
+            except Exception as e:
+                ctk.CTkLabel(self.main_frame, text=f"Failed to delete {repo_name}: {e}", text_color="red").pack(pady=10)
 
     def launch_app(self, app_path):
         main_py_path = os.path.join(app_path, "main.py")
